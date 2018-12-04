@@ -1,0 +1,121 @@
+<!-- These XML tags are added to Excel sheet at run-time by UDIMAGIC  -->
+<XMLTAGS CELLREFERENCE="A1" xmlns:UDF="TallyUDF">
+	<!-- Specifies that this (i.e Column as mentioned above) is the key field -->
+	<COLUMNNAME.LIST>
+		<COLUMNNAME>ID</COLUMNNAME>
+		<COLUMNNAME>NAME</COLUMNNAME>
+	</COLUMNNAME.LIST>
+	<!-- Create VOUCHERTYPE Masters -->
+	<MASTER TYPE="VOUCHERTYPE">
+		<COMPANYNAME FORMULA="=AI#[1]"/>
+		<NAME.LIST>
+			<NAME COLUMNREFERENCE="C"/>
+		</NAME.LIST>
+		<PARENT COLUMNREFERENCE="B"/>
+		<NUMBERINGMETHOD>Manual</NUMBERINGMETHOD>
+		<ISDEEMEDPOSITIVE FORMULA="=If(Or(B#=&quot;Payment&quot;,B#=&quot;Sales&quot;,B#=&quot;Debit Note&quot;,B#=&quot;Journal&quot;,B#=&quot;Sales Order&quot;),&quot;Yes&quot;,&quot;No&quot;)"/>
+		<COMMONNARRATION>Yes</COMMONNARRATION>
+	</MASTER>
+	<!-- Create Group Master -->
+	<MASTER TYPE="GROUP">
+		<COMPANYNAME FORMULA="=AI#[1]"/>
+		<NAME.LIST>
+			<NAME FORMULA="=if(len(trim(N#))=0,&quot;New Ledgers&quot;,N#)"/>
+		</NAME.LIST>
+		<PARENT/>
+	</MASTER>
+	<!-- Cost Category -->
+	<MASTER TYPE="COSTCATEGORY">
+		<COMPANYNAME FORMULA="=AI#[1]"/>
+		<NAME.LIST>
+			<NAME COLUMNREFERENCE="O"/>
+		</NAME.LIST>
+		<ALLOCATEREVENUE>Yes</ALLOCATEREVENUE>
+		<ALLOCATENONREVENUE>Yes</ALLOCATENONREVENUE>
+	</MASTER>
+	<!-- Cost Centre -->
+	<MASTER TYPE="COSTCENTRE">
+		<COMPANYNAME FORMULA="=AI#[1]"/>
+		<NAME.LIST>
+			<NAME COLUMNREFERENCE="P"/>
+		</NAME.LIST>
+		<CATEGORY SKIP="=Len(trim(O#))=0" COLUMNREFERENCE="O"/>
+		<REVENUELEDFOROPBAL>No</REVENUELEDFOROPBAL>
+		<AFFECTSSTOCK>No</AFFECTSSTOCK>
+	</MASTER>
+	<!-- Create Ledger Masters -->
+	<MASTER TYPE="LEDGER">
+		<COMPANYNAME FORMULA="=AI#[1]"/>
+		<NAME.LIST>
+			<NAME COLUMNREFERENCE="H"/>
+		</NAME.LIST>
+		<PARENT FORMULA="=if(len(trim(N#))=0,&quot;New Ledgers&quot;,N#)"/>
+		<ISCOSTCENTRESON FORMULA="=If(Len(trim(P#))&gt;0,&quot;Yes&quot;,&quot;No&quot;)"/>
+		<ISBILLWISEON FORMULA="=If(Len(trim(T#))&gt;0,&quot;Yes&quot;,&quot;No&quot;)"/>
+	</MASTER>
+	<VOUCHER10>
+		<COMPANYNAME FORMULA="=AI#[1]"/>
+		<GUID FORMULA="=&quot;udi-BF39WD-&quot; &amp; A# &amp; &quot;-&quot; &amp; E# &amp; &quot;-&quot; &amp; C#"/>
+		<DATE COLUMNREFERENCE="E"/>
+		<EFFECTIVEDATE COLUMNREFERENCE="E"/>
+		<VOUCHERTYPENAME COLUMNREFERENCE="C"/>
+		<VOUCHERNUMBER COLUMNREFERENCE="D"/>
+		<REFERENCE COLUMNREFERENCE="F"/>
+		<REFERENCEDATE COLUMNREFERENCE="G"/>
+		<NARRATION COLUMNREFERENCE="AG"/>
+		<PERSISTEDVIEW>Accounting Voucher View</PERSISTEDVIEW>
+		<ISINVOICE>No</ISINVOICE>
+		<ALLLEDGERENTRIES.LIST SCROLL="YES" SKIP="=Or(Len(trim(H#))=0,Round(L#+M#,2)=0)">
+			<NARRATION COLUMNREFERENCE="AH"/>
+			<LEDGERNAME COLUMNREFERENCE="H"/>
+			<ISDEEMEDPOSITIVE FORMULA="=IF(Round(L#,2)=0,&quot;No&quot;,&quot;Yes&quot;)"/>
+			<AMOUNT SKIP="=And(Round(J#,2)&gt;0,Round(K#,2)&gt;0)" FORMULA="=IF(Round(L#,2)=0,Round(M#,2),Round(L#,2)*-1)"/>
+			<!--<AMOUNT>14500.00 $ @ ? 124.53/ $ = ? 1805685.00</AMOUNT>-->
+			<AMOUNT SKIP="=Not(And(Round(J#,2)&gt;0,Round(K#,2)&gt;0))" FORMULA="=Round(J#,2)*IF(Round(L#,2)=0,1,-1) &amp; &quot; &quot; &amp; I# &amp; &quot; @ &quot; &amp; K# &amp; &quot;/&quot; &amp; I# &amp; &quot; = &quot; &amp; IF(Round(L#,2)=0,Round(M#,2),Round(L#,2)*-1)"/>
+
+			<CATEGORYALLOCATIONS.LIST SCROLL="=if(And(A#=Offset(A#,1,0),Round(Offset(L#,1,0)+Offset(M#,1,0),2)=0),1=1,1=2)" SCROLLCOLUMN="=Sum(Column(H#))" SKIP="=Or(len(trim(O#))=0,If(A#=Offset(A#,-1,0),And(len(trim(H#))=0,O#=Offset(O#,-1,0)),1=2))">
+				<CATEGORY COLUMNREFERENCE="O"/>
+				<ISDEEMEDPOSITIVE FORMULA="=IF(Round(Q#,2)=0,&quot;No&quot;,&quot;Yes&quot;)"/>
+				<COSTCENTREALLOCATIONS.LIST SCROLL="=And(Len(trim(P#))&gt;0,If(A#=Offset(A#,1,0),Round(Round(Offset(L#,1,0),2)+Round(Offset(M#,1,0),2),2)=0,1=2),If(A#=Offset(A#,1,0),O#=Offset(O#,1,0),1=2))">
+					<NAME COLUMNREFERENCE="P"/>
+					<AMOUNT FORMULA="=IF(Round(Q#,2)=0,Round(R#,2),Round(Q#,2)*-1)"/>
+				</COSTCENTREALLOCATIONS.LIST>
+			</CATEGORYALLOCATIONS.LIST>
+			<!-- Added as the previous SCROLL is conditional -->
+			<DUMMY SCROLL="YES">
+				<DUMMY FORMULA="=&quot;&quot; &amp; #"/>
+			</DUMMY>
+			<!-- 
+      Scroll with formula should be used sparingly as it may end abruptly resulting in the
+      following tags to be skipped.
+      -->
+			<BILLALLOCATIONS.LIST SCROLL="YES" SCROLLCOLUMN="=Sum(Column(H#))" SKIP="=Or(Len(trim(T#))=0,Round(U#+V#,2)=0)">
+				<NAME COLUMNREFERENCE="T"/>
+				<BILLTYPE COLUMNREFERENCE="S"/>
+				<AMOUNT SKIP="=And(Round(J#,2)&gt;0,Round(K#,2)&gt;0)" FORMULA="=IF(Round(U#,2)=0,Round(V#,2),Round(U#,2)*-1)"/>
+				<!--FOREX-->
+				<AMOUNT SKIP="=Not(And(Round(J#,2)&gt;0,Round(K#,2)&gt;0))" FORMULA="=Round(J#,2)*IF(Round(L#,2)=0,1,-1) &amp; &quot; &quot; &amp; I# &amp; &quot; @ &quot; &amp; K# &amp; &quot;/&quot; &amp; I# &amp; &quot; = &quot; &amp; IF(Round(L#,2)=0,Round(M#,2),Round(L#,2)*-1)"/>
+			</BILLALLOCATIONS.LIST>
+			<BANKALLOCATIONS.LIST SCROLL="YES" SCROLLCOLUMN="=Sum(Column(H#))" SKIP="=And(len(trim(W#))=0,len(trim(X#))=0,len(trim(AA#))=0,len(trim(AB#))=0,len(trim(AE#))=0,len(trim(AF#))=0)">
+				<DATE FORMULA="=E#[1]"/>
+				<INSTRUMENTDATE COLUMNREFERENCE="X"/>
+				<INSTRUMENTNUMBER COLUMNREFERENCE="W"/>
+				<!-- Not supported as Bank ID is required -->
+				<!-- <BANKNAME/> -->
+				<!-- <BANKBRANCHNAME/> -->
+				<BANKPARTYNAME COLUMNREFERENCE="AC"/>
+				<TRANSACTIONTYPE FORMULA="=if(len(trim(AA#))=0,&quot;Cheque&quot;,AA#)"/>
+				<PAYMENTFAVOURING FORMULA="if(len(trim(AB#))=0,H#,AB#)"/>
+				<NARRATION COLUMNREFERENCE="AD"/>
+				<CHEQUECROSSCOMMENT COLUMNREFERENCE="AE"/>
+				<BANKERSDATE COLUMNREFERENCE="AF"/>
+				<STATUS>No</STATUS>
+				<AMOUNT SKIP="=Not(And(Round(Y#,2)=0,Round(Z#,2)=0))" FORMULA="=IF(Round(L#,2)=0,Round(M#,2),Round(L#,2)*-1)"/>
+				<AMOUNT SKIP="=And(Round(Y#,2)=0,Round(Z#,2)=0)" FORMULA="=IF(Round(Y#,2)=0,Round(Z#,2),Round(Y#,2)*-1)"/>
+				<PAYMENTMODE>Transacted</PAYMENTMODE>
+				<NAME FORMULA="=+&quot;udi-BF39WD-&quot; &amp; A# &amp; &quot;-&quot; &amp; E# &amp; &quot;-&quot; &amp; H# &amp; &quot;-&quot; &amp; #"/>
+			</BANKALLOCATIONS.LIST>
+		</ALLLEDGERENTRIES.LIST>
+	</VOUCHER10>
+</XMLTAGS>
+
